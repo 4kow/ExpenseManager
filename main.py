@@ -7,10 +7,7 @@ import datetime
 import tkinter.messagebox as messagebox
 from dateutil.relativedelta import relativedelta
 import customtkinter
-
-
-customtkinter.set_appearance_mode("dark")
-customtkinter.set_default_color_theme("dark-blue")
+import os
 
 selected_month_to_add = None
 months_to_add = 0
@@ -106,14 +103,13 @@ def add_regular_record(name, category, amount):
     update_unpaid_amount_label()
 
 
-def add_deferred_record(name, category, amount, status="Unpaid"):
+def add_deferred_record(name, category, amount, status = "Unpaid"):
     global repayment_date, selected_month_to_add, months_to_add, subscription_month_to_add, subscription_months_amount_to_add, selected_year
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     unpaid_amount_to_add = amount
-
 
     if subscription_date is None:
         # Dodaj pierwszy rekord
@@ -134,10 +130,10 @@ def add_deferred_record(name, category, amount, status="Unpaid"):
             cursor.execute(
                 "INSERT INTO payments (month, name, deferred_amount, repayment_date, category, amount, status, year, is_subscription) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (calendar.month_name[new_repayment_date.month], name, True, new_repayment_date.strftime("%d-%m-%Y"),
-                 category, amount / months_to_add, status, new_selected_year, False))  # Ustawienie statusu dla nowego rekordu
+                 category, amount / months_to_add, status, new_selected_year,
+                 False))  # Ustawienie statusu dla nowego rekordu
 
             unpaid_amount_to_add += amount / months_to_add
-
 
             new_repayment_date = new_repayment_date + relativedelta(months = 1)
 
@@ -156,7 +152,8 @@ def add_deferred_record(name, category, amount, status="Unpaid"):
             new_selected_year = new_subscription_date.year
             cursor.execute(
                 "INSERT INTO payments (month, name, deferred_amount, repayment_date, category, amount, status, year, is_subscription) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (calendar.month_name[new_subscription_date.month], name, True, new_subscription_date.strftime("%d-%m-%Y"),
+                (calendar.month_name[new_subscription_date.month], name, True,
+                 new_subscription_date.strftime("%d-%m-%Y"),
                  category, amount, status, new_selected_year, True))  # Ustawienie statusu dla nowego rekordu
 
             unpaid_amount_to_add += amount
@@ -226,7 +223,8 @@ def create_year_picker():
 def create_month_picker():
     months = [""]
     months.extend(calendar.month_name[1:])
-    month_picker_combobox = customtkinter.CTkComboBox(master = entry_frame, command = on_month_selected, values = months)
+    month_picker_combobox = customtkinter.CTkComboBox(master = entry_frame, command = on_month_selected,
+                                                      values = months)
     month_picker_combobox.grid(row = 0, column = 1, padx = 5, pady = 5)
     month_picker_combobox.set("Select Month")
     return month_picker_combobox
@@ -290,8 +288,6 @@ def open_amount_widget():
     amount_widget.geometry("215x330")
     amount_widget.focus()
 
-
-
     def on_digit_click(digit):
         current_value = entry_amount.get()
         entry_amount.delete(0, tk.END)
@@ -323,12 +319,14 @@ def open_amount_widget():
     row, col = 1, 0
     for digit in digits:
         if digit == '⌫':
-            btn = customtkinter.CTkButton(amount_widget, text = digit, font = button_font, width = 50, height = 50, command = on_backspace_click)
+            btn = customtkinter.CTkButton(amount_widget, text = digit, font = button_font, width = 50, height = 50,
+                                          command = on_backspace_click)
         elif digit == '.':
-            btn = customtkinter.CTkButton(amount_widget, text = digit, font = button_font, width = 50, height = 50,command = on_coma_click)
+            btn = customtkinter.CTkButton(amount_widget, text = digit, font = button_font, width = 50, height = 50,
+                                          command = on_coma_click)
         else:
             btn = customtkinter.CTkButton(amount_widget, text = digit, font = button_font,
-                            width = 50, height = 50, command = lambda d = digit: on_digit_click(d))
+                                          width = 50, height = 50, command = lambda d = digit: on_digit_click(d))
 
         btn.grid(row = row, column = col, padx = 10, pady = 10)
         col += 1
@@ -367,7 +365,6 @@ def open_date_picker():
     calendar_toplevel.geometry("400x400")
     calendar_toplevel.focus()
 
-
     today = datetime.date.today()
     calendar_widget = Calendar(calendar_toplevel, selectmode = 'day', year = today.year, month = today.month,
                                day = today.day)
@@ -375,7 +372,7 @@ def open_date_picker():
 
     checked = tk.BooleanVar()
     checkbox_add_months = customtkinter.CTkCheckBox(calendar_toplevel, text = "no. of installments", variable = checked,
-                                         command = checkbox_checked)
+                                                    command = checkbox_checked)
     checkbox_add_months.pack(pady = 10)
 
     months = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
@@ -404,15 +401,16 @@ def open_subscription_picker():
     calendar_toplevel_s.focus()
 
     today = datetime.date.today()
-    calendar_subscription_widget = Calendar(calendar_toplevel_s, selectmode = 'day', year = today.year, month = today.month,
-                               day = today.day)
+    calendar_subscription_widget = Calendar(calendar_toplevel_s, selectmode = 'day', year = today.year,
+                                            month = today.month,
+                                            day = today.day)
     calendar_subscription_widget.pack(pady = 20)
 
     ok_button = customtkinter.CTkButton(calendar_toplevel_s, text = "OK", command = on_subscription_date_select)
     ok_button.pack(pady = 10)
 
 
-def show_records(month=None, category=None, year=None):
+def show_records(month = None, category = None, year = None):
     global status
 
     conn = sqlite3.connect('database.db')
@@ -437,7 +435,7 @@ def show_records(month=None, category=None, year=None):
     else:
         cursor.execute("SELECT * FROM payments WHERE month=? AND category=? AND year=?", (month, category, year))
 
-    records = sorted(cursor.fetchall(), key=lambda x: (months_mapping[x[1]], x[4], x[5]))
+    records = sorted(cursor.fetchall(), key = lambda x: (months_mapping[x[1]], x[4], x[5]))
 
     tree.delete(*tree.get_children())
 
@@ -445,31 +443,34 @@ def show_records(month=None, category=None, year=None):
         deferred_amount = "Yes" if record[3] else "No"
         amount = f"{record[6]:.2f} PLN" if record[6] is not None else ""
         status = record[7] if record[3] else ""  # Ustawiamy status tylko dla deferred_record
-        tree.insert("", "end", values=(record[0], record[1], record[2], deferred_amount, record[4], record[5], amount, status))
+        tree.insert("", "end",
+                    values = (record[0], record[1], record[2], deferred_amount, record[4], record[5], amount, status))
         is_subscription_dict[record[0]] = record[9]
 
     conn.close()
 
     if month_sort_combobox.get() != "Select month for sort" and category_picker_combobox.get() != "Select category":
-        update_total_amount_label(calculate_total_amount(month=month, category=category, year=year), month, year)
-        update_unpaid_amount_label(calculate_unpaid_amount(month=month, category=category, year=year), month, year)
+        update_total_amount_label(calculate_total_amount(month = month, category = category, year = year), month, year)
+        update_unpaid_amount_label(calculate_unpaid_amount(month = month, category = category, year = year), month,
+                                   year)
     elif month and category:
-        update_total_amount_label(calculate_total_amount(month=month, category=category, year=year), month, year)
-        update_unpaid_amount_label(calculate_unpaid_amount(month=month, category=category, year=year), month, year)
+        update_total_amount_label(calculate_total_amount(month = month, category = category, year = year), month, year)
+        update_unpaid_amount_label(calculate_unpaid_amount(month = month, category = category, year = year), month,
+                                   year)
     elif month:
-        update_total_amount_label(calculate_total_amount(month=month, year=year), month, year)
-        update_unpaid_amount_label(calculate_unpaid_amount(month=month, year=year), month, year)
+        update_total_amount_label(calculate_total_amount(month = month, year = year), month, year)
+        update_unpaid_amount_label(calculate_unpaid_amount(month = month, year = year), month, year)
     elif category:
-        update_total_amount_label(calculate_total_amount(category=category, year=year), None, year)
-        update_unpaid_amount_label(calculate_unpaid_amount(category=category, year=year), None, year)
+        update_total_amount_label(calculate_total_amount(category = category, year = year), None, year)
+        update_unpaid_amount_label(calculate_unpaid_amount(category = category, year = year), None, year)
     else:
-        update_total_amount_label(calculate_total_amount(year=year), None, year)
-        update_unpaid_amount_label(calculate_unpaid_amount(year=year), None, year)
+        update_total_amount_label(calculate_total_amount(year = year), None, year)
+        update_unpaid_amount_label(calculate_unpaid_amount(year = year), None, year)
 
     conn.close()
 
 
-def calculate_total_amount(month=None, category=None, year=None):
+def calculate_total_amount(month = None, category = None, year = None):
     if year is None:
         year = selected_year
 
@@ -494,7 +495,8 @@ def calculate_total_amount(month=None, category=None, year=None):
     conn.close()
     return total_amount
 
-def calculate_unpaid_amount(month=None, category=None, year=None):
+
+def calculate_unpaid_amount(month = None, category = None, year = None):
     if year is None:
         year = selected_year
 
@@ -520,7 +522,7 @@ def calculate_unpaid_amount(month=None, category=None, year=None):
     return unpaid_amount
 
 
-def update_total_amount_label(total_amount_to_add=None, month=None, year=None):
+def update_total_amount_label(total_amount_to_add = None, month = None, year = None):
     global selected_sort_month, selected_category
 
     if year is None:
@@ -530,22 +532,23 @@ def update_total_amount_label(total_amount_to_add=None, month=None, year=None):
 
     if selected_category == "Select category":
         if selected_sort_month is None:
-            total_amount = calculate_total_amount(year=year)
+            total_amount = calculate_total_amount(year = year)
         else:
-            total_amount = calculate_total_amount(month=selected_sort_month, year=year)
+            total_amount = calculate_total_amount(month = selected_sort_month, year = year)
     else:
         if selected_sort_month is None:
-            total_amount = calculate_total_amount(category=selected_category, year=year)
+            total_amount = calculate_total_amount(category = selected_category, year = year)
         else:
-            total_amount = calculate_total_amount(month=selected_sort_month, category=selected_category, year=year)
+            total_amount = calculate_total_amount(month = selected_sort_month, category = selected_category,
+                                                  year = year)
 
     if total_amount_to_add is not None and month:
         total_amount += total_amount_to_add
 
-    total_amount_label.configure(text=f"Total Amount: {total_amount:.2f} PLN")
+    total_amount_label.configure(text = f"Total Amount: {total_amount:.2f} PLN")
 
 
-def update_unpaid_amount_label(unpaid_amount_to_add=None, month=None, year=None):
+def update_unpaid_amount_label(unpaid_amount_to_add = None, month = None, year = None):
     global selected_sort_month, selected_category
 
     if year is None:
@@ -558,19 +561,20 @@ def update_unpaid_amount_label(unpaid_amount_to_add=None, month=None, year=None)
 
     if selected_category == "Select category":
         if selected_sort_month is None:
-            unpaid_amount = calculate_unpaid_amount(year=year)
+            unpaid_amount = calculate_unpaid_amount(year = year)
         else:
-            unpaid_amount = calculate_unpaid_amount(month=selected_sort_month, year=year)
+            unpaid_amount = calculate_unpaid_amount(month = selected_sort_month, year = year)
     else:
         if selected_sort_month is None:
-            unpaid_amount = calculate_unpaid_amount(category=selected_category, year=year)
+            unpaid_amount = calculate_unpaid_amount(category = selected_category, year = year)
         else:
-            unpaid_amount = calculate_unpaid_amount(month=selected_sort_month, category=selected_category, year=year)
+            unpaid_amount = calculate_unpaid_amount(month = selected_sort_month, category = selected_category,
+                                                    year = year)
 
     if unpaid_amount_to_add is not None and month:
         unpaid_amount += unpaid_amount_to_add
 
-    unpaid_amount_label.configure(text=f"Unpaid Amount: {unpaid_amount:.2f} PLN")
+    unpaid_amount_label.configure(text = f"Unpaid Amount: {unpaid_amount:.2f} PLN")
 
 
 def update_category_combobox():
@@ -593,7 +597,7 @@ def show_all_data():
     root.title(f"Expenses Manager - {selected_year}")
 
     selected_sort_month = None
-    show_records(year=selected_year)
+    show_records(year = selected_year)
 
     update_total_amount_label()
     update_unpaid_amount_label()
@@ -653,8 +657,8 @@ def create_category_combobox():
     list_of_categories = cursor.execute("SELECT DISTINCT category FROM payments").fetchall()
     categories = ["Select category"] + [category[0] for category in list_of_categories]
 
-    categories_picker_combobox = customtkinter.CTkComboBox(master = entry_frame,values = categories,
-                                                           command = on_category_selected, width=200)
+    categories_picker_combobox = customtkinter.CTkComboBox(master = entry_frame, values = categories,
+                                                           command = on_category_selected, width = 200)
     categories_picker_combobox.grid(row = 0, column = 4, padx = 5, pady = 5)
     categories_picker_combobox.set("Select category")
 
@@ -662,11 +666,13 @@ def create_category_combobox():
 
     return categories_picker_combobox
 
+
 def create_month_sort_combobox():
     months = ["Select month for sort"]
     months.extend(calendar.month_name[1:])
-    month_sort_combobox = customtkinter.CTkComboBox(master = entry_frame, command = on_month_sort_selected, values=months, width=200)
-    month_sort_combobox.grid(row=1, column=4, padx=5, pady=5)
+    month_sort_combobox = customtkinter.CTkComboBox(master = entry_frame, command = on_month_sort_selected,
+                                                    values = months, width = 200)
+    month_sort_combobox.grid(row = 1, column = 4, padx = 5, pady = 5)
     month_sort_combobox.set("Select month for sort")
     return month_sort_combobox
 
@@ -687,7 +693,7 @@ def on_month_sort_selected(choice):
     update_unpaid_amount_label(None, selected_sort_month, selected_year)
 
 
-def mark_as_paid(unpaid_amount_to_add=0.0, total_amount_to_add=0.0):
+def mark_as_paid(unpaid_amount_to_add = 0.0, total_amount_to_add = 0.0):
     global status, selected_sort_month, selected_category
 
     selected_items = tree.selection()
@@ -712,8 +718,9 @@ def mark_as_paid(unpaid_amount_to_add=0.0, total_amount_to_add=0.0):
         cursor.execute("UPDATE payments SET status=? WHERE id=?", ("Paid", record_id))
 
         # Update status in treeview
-        tree.item(item, values=(record_id, tree.item(item, 'values')[1], tree.item(item, 'values')[2], tree.item(item, 'values')[3],
-                                tree.item(item, 'values')[4], tree.item(item, 'values')[5], tree.item(item, 'values')[6], "Paid"))
+        tree.item(item, values = (
+        record_id, tree.item(item, 'values')[1], tree.item(item, 'values')[2], tree.item(item, 'values')[3],
+        tree.item(item, 'values')[4], tree.item(item, 'values')[5], tree.item(item, 'values')[6], "Paid"))
 
     conn.commit()
     conn.close()
@@ -722,6 +729,101 @@ def mark_as_paid(unpaid_amount_to_add=0.0, total_amount_to_add=0.0):
 
     update_total_amount_label()
     update_unpaid_amount_label()
+
+
+def change_theme():
+    button_mode = switch.get()
+    theme_value = button_mode
+    if button_mode is 1:
+        customtkinter.set_appearance_mode("dark")
+        treestyle = ttk.Style()
+        treestyle.theme_use('clam')
+        treestyle.configure("Treeview", background = "#212121", foreground = "light gray", fieldbackground = "212121",
+                            borderwidth = 3, bordercolor = "gray")
+        treestyle.configure("Treeview.Heading", font = ("Araboto normal", 10), background = "#1F538D",
+                            foreground = "light gray")
+        treestyle.map('Treeview', background = [('selected', 'white')], foreground = [('selected', 'black')])
+    else:
+        customtkinter.set_appearance_mode("light")
+        treestyle = ttk.Style()
+        treestyle.theme_use('clam')
+        treestyle.configure("Treeview", background = "#e5e5e5", foreground = "black", fieldbackground = "#e5e5e5",
+                            borderwidth = 3, bordercolor = "gray")
+        treestyle.configure("Treeview.Heading", font = ("Araboto normal", 10), background = "#3a7ebf",
+                            foreground = "white")
+        treestyle.map('Treeview', background = [('selected', 'white')], foreground = [('selected', 'black')])
+
+    save_theme(theme_value)
+
+    lines_with_treeview_settings = read_settings_from_file("theme.txt")
+    apply_treeview_style_from_file(lines_with_treeview_settings)
+    switch_var.set(theme_value)
+
+
+def save_theme(theme_value):
+    file_path = os.path.expanduser("~")
+    file_path = os.path.join(file_path, "theme.txt")
+    with open(file_path, "w") as file:
+        file.write(f"{theme_value}\n")
+        if theme_value == 1:
+            write_treeview_settings(file, "#212121", "light gray", "212121", "gray", "#1F538D", "light gray", "white",
+                                    "black")
+        else:
+            write_treeview_settings(file, "#e5e5e5", "black", "#e5e5e5", "gray", "#3a7ebf", "white", "white", "black")
+
+
+def write_treeview_settings(file, bg1, fg1, fb1, bc1, bg2, fg2, fb2, bc2):
+    file.write(f"background1:{bg1}\n")
+    file.write(f"foreground1:{fg1}\n")
+    file.write(f"fieldbackground1:{fb1}\n")
+    file.write(f"bordercolor1:{bc1}\n")
+    file.write(f"background2:{bg2}\n")
+    file.write(f"foreground2:{fg2}\n")
+    file.write(f"fieldbackground2:{fb2}\n")
+    file.write(f"bordercolor2:{bc2}\n")
+
+
+def load_theme():
+    try:
+        file_path = os.path.expanduser("~")
+        file_path = os.path.join(file_path, "theme.txt")
+
+        with open(file_path, "r") as file:
+            lines = file.readlines()
+            theme_value = int(lines[0].strip())
+            return theme_value
+    except FileNotFoundError:
+        return 0
+
+
+def apply_treeview_style_from_file(style_lines):
+    treestyle = ttk.Style()
+    treestyle.theme_use('clam')
+
+    tree_style_settings = {}
+    for line in style_lines:
+        if ":" in line:
+            key, value = line.strip().split(":")
+            tree_style_settings[key] = value
+
+    if "background1" in tree_style_settings:
+        treestyle.configure("Custom.Treeview", background = tree_style_settings["background1"])
+    if "foreground1" in tree_style_settings:
+        treestyle.configure("Custom.Treeview", foreground = tree_style_settings["foreground1"])
+    if "fieldbackground1" in tree_style_settings:
+        treestyle.configure("Custom.Treeview", fieldbackground = tree_style_settings["fieldbackground1"])
+    if "bordercolor1" in tree_style_settings:
+        treestyle.configure("Custom.Treeview", bordercolor = tree_style_settings["bordercolor1"])
+    if "background2" in tree_style_settings:
+        treestyle.configure("Custom.Treeview.Heading", background = tree_style_settings["background2"])
+    if "foreground2" in tree_style_settings:
+        treestyle.configure("Custom.Treeview.Heading", foreground = tree_style_settings["foreground2"])
+    if "fieldbackground2" in tree_style_settings:
+        treestyle.configure("Custom.Treeview.Heading", fieldbackground = tree_style_settings["fieldbackground2"])
+    if "bordercolor2" in tree_style_settings:
+        treestyle.configure("Custom.Treeview.Heading", bordercolor = tree_style_settings["bordercolor2"])
+
+    treestyle.map('Custom.Treeview', background = [('selected', 'white')], foreground = [('selected', 'black')])
 
 
 database()
@@ -741,7 +843,7 @@ def on_deferred_amount_checked():
 
 
 window_width = 1100
-window_height = 860
+window_height = 890
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 x = (screen_width - window_width) // 2
@@ -769,15 +871,18 @@ entry_name = customtkinter.CTkEntry(entry_frame)
 entry_name.grid(row = 1, column = 1, padx = 5, pady = 5)
 
 check_deferred_amount = tk.BooleanVar()
-checkbutton_deferred_amount = customtkinter.CTkCheckBox(entry_frame, text = "Deferred amount", variable = check_deferred_amount,
-                                             command = on_deferred_amount_checked)
+checkbutton_deferred_amount = customtkinter.CTkCheckBox(entry_frame, text = "Deferred amount",
+                                                        variable = check_deferred_amount,
+                                                        command = on_deferred_amount_checked)
 checkbutton_deferred_amount.grid(row = 2, columnspan = 2, padx = 5, pady = 5)
 
 label_repayment_date = customtkinter.CTkLabel(entry_frame, text = "Repayment date:")
 label_repayment_date.grid(row = 3, column = 0, padx = 5, pady = 5)
-button_date_picker = customtkinter.CTkButton(entry_frame, text = "Pick date", command = open_date_picker, state = tk.DISABLED)
+button_date_picker = customtkinter.CTkButton(entry_frame, text = "Pick date", command = open_date_picker,
+                                             state = tk.DISABLED)
 button_date_picker.grid(row = 3, column = 2, padx = 5, pady = 5)
-button_subscription = customtkinter.CTkButton(entry_frame, text = "Subscription", command = open_subscription_picker, state = tk.DISABLED)
+button_subscription = customtkinter.CTkButton(entry_frame, text = "Subscription", command = open_subscription_picker,
+                                              state = tk.DISABLED)
 button_subscription.grid(row = 3, column = 3, padx = 5, pady = 5)
 
 label_category = customtkinter.CTkLabel(entry_frame, text = "Category:")
@@ -797,30 +902,16 @@ button_add = customtkinter.CTkButton(entry_frame, text = "Add spending", command
 button_add.grid(row = 6, column = 1, columnspan = 2, padx = 5, pady = 10, sticky = "w")
 
 # Treeview container
-treeview_frame = customtkinter.CTkFrame(master=root)
+treeview_frame = customtkinter.CTkFrame(master = root)
 treeview_frame.pack(side = tk.TOP, padx = 10, pady = 10)
 
-
 # Treeview
-bg_color = root._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkFrame"]["fg_color"])
-text_color = root._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkLabel"]["text_color"])
-selected_color = root._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkButton"]["fg_color"])
-
-treestyle = ttk.Style()
-treestyle.theme_use('clam')
-treestyle.configure("Treeview", background=bg_color, foreground=text_color, fieldbackground=bg_color, borderwidth=3, bordercolor="gray")
-treestyle.configure("Treeview.Heading", font = ("Araboto normal", 10), background = "#1F538D", foreground = "light gray")
-treestyle.map('Treeview', background=[('selected', 'white')], foreground=[('selected', 'black')])
-
-
 root.bind("<<TreeviewSelect>>", lambda event: root.focus_set())
 
-
-
-tree = ttk.Treeview(treeview_frame, columns=("ID", "Month", "Name", "Deferred Amount", "Repayment Date", "Category", "Amount", "Status"), style="Custom.Treeview")
+tree = ttk.Treeview(treeview_frame, columns = (
+"ID", "Month", "Name", "Deferred Amount", "Repayment Date", "Category", "Amount", "Status"), style = "Custom.Treeview")
 tree.pack(expand = True)
 tree["height"] = 17
-
 
 # Setting up the treeview
 tree.heading("#1", text = "ID")
@@ -832,14 +923,14 @@ tree.heading("#6", text = "Category")
 tree.heading("#7", text = "Amount")
 tree.heading("#8", text = "Status")
 
-tree.column("#1", stretch=False, width=50)
-tree.column("#2", stretch=True, width=100)
-tree.column("#3", stretch=True, width=150)
-tree.column("#4", stretch=True, width=150)
-tree.column("#5", stretch=True, width=150)
-tree.column("#6", stretch=True, width=100)
-tree.column("#7", stretch=True, width=100)
-tree.column("#8", stretch=True, width=60)
+tree.column("#1", stretch = False, width = 50)
+tree.column("#2", stretch = True, width = 100)
+tree.column("#3", stretch = True, width = 150)
+tree.column("#4", stretch = True, width = 150)
+tree.column("#5", stretch = True, width = 150)
+tree.column("#6", stretch = True, width = 100)
+tree.column("#7", stretch = True, width = 100)
+tree.column("#8", stretch = True, width = 60)
 
 # Assigning the delete_selected() function to a "delete" event
 tree.bind("<Delete>", delete_selected)
@@ -851,15 +942,14 @@ calendar_frame.pack(side = tk.TOP, padx = 10, pady = 10)
 months = [month for month in calendar.month_name[1:]]
 month_buttons = []
 
-
 # Buttons on the bottom part of the app
 button_show_all = customtkinter.CTkButton(calendar_frame, text = "Show All", command = show_all_data)
 button_show_all.grid(row = 3, column = 0, columnspan = 2, padx = 5, pady = 5)
 button_delete_selected = customtkinter.CTkButton(calendar_frame, text = "Delete Selected", command = delete_selected)
 button_delete_selected.grid(row = 3, column = 2, padx = 5, pady = 5)
 
-button_mark_as_paid = customtkinter.CTkButton(calendar_frame, text="Mark as Paid", command=mark_as_paid)
-button_mark_as_paid.grid(row=3, column=3, padx=5, pady=5)
+button_mark_as_paid = customtkinter.CTkButton(calendar_frame, text = "Mark as Paid", command = mark_as_paid)
+button_mark_as_paid.grid(row = 3, column = 3, padx = 5, pady = 5)
 
 total_amount_label = customtkinter.CTkLabel(calendar_frame, text = "Total Amount: 0.00 PLN")
 total_amount_label.grid(row = 4, column = 0, columnspan = len(months[4:8]), padx = 5, pady = 5)
@@ -867,6 +957,32 @@ total_amount_label.grid(row = 4, column = 0, columnspan = len(months[4:8]), padx
 unpaid_amount_label = customtkinter.CTkLabel(calendar_frame, text = "Unpaid Amount: 0.00 PLN")
 unpaid_amount_label.grid(row = 5, column = 0, columnspan = len(months[4:8]), padx = 5, pady = 5)
 
+current_theme = str(load_theme())
+switch_var = customtkinter.StringVar()
+
+switch = customtkinter.CTkSwitch(calendar_frame, text = "Switch mode", command = change_theme,
+                                 variable = switch_var, onvalue = 1, offvalue = 0)
+switch.grid(row = 6, column = 2, padx = 5, pady = 5)
+
+if int(current_theme) is 0:
+    switch.deselect()
+else:
+    switch.select()
+
+
+customtkinter.set_appearance_mode("dark" if current_theme == "1" else "light")
+customtkinter.set_default_color_theme("dark-blue")
+
+
+def read_settings_from_file(file_path):
+    file_path = os.path.join(os.path.expanduser("~"), "theme.txt")
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+    return lines
+
+
+lines_with_treeview_settings = read_settings_from_file("theme.txt")
+apply_treeview_style_from_file(lines_with_treeview_settings)
 
 create_year_navigation_buttons()
 month_sort_combobox = create_month_sort_combobox()
