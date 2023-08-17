@@ -788,6 +788,10 @@ def load_theme():
         file_path = os.path.expanduser("~")
         file_path = os.path.join(file_path, "theme.txt")
 
+        if not os.path.exists(file_path):
+            with open(file_path, "w") as file:
+                file.write("0\n")
+
         with open(file_path, "r") as file:
             lines = file.readlines()
             theme_value = int(lines[0].strip())
