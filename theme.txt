@@ -1,0 +1,9 @@
+0
+background1:#e5e5e5
+foreground1:black
+fieldbackground1:#e5e5e5
+bordercolor1:gray
+background2:#3a7ebf
+foreground2:white
+fieldbackground2:white
+bordercolor2:black
