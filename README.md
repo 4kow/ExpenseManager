@@ -1,4 +1,7 @@
 # ExpenseManager
+
+**If you want to download the application and install it on your PC just download the setup file from files in this repository**
+
 This application helps users with keeping an eye on their spends. It has a bunch of useful functionallities that really help with tracking all money spent and what is left to pay back.
 
 Application is created using Python language and Tkinter library. It provides a good-looking user interface that supports some widgets like the widget to enter the amount or to choose a specific date when adding a new spending.
